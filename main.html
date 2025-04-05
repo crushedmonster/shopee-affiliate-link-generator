@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shopee Affiliate Link Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 30px;
+      background-color: #f9f9f9;
+    }
+    
+    h2 {
+      color: #ee4d2d;
+      margin-bottom: 20px;
+    }
+    
+    .input-field {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    
+    button.generate {
+      padding: 10px;
+      font-size: 16px;
+      background-color: #ee4d2d;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 200px;
+      margin-bottom: 20px;
+    }
+    
+    button.generate:hover {
+      background-color: #dd3c1a;
+    }
+    
+    .result {
+      margin-top: 20px;
+    }
+    
+    .result-label {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    textarea {
+      width: 100%;
+      height: 80px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    
+    button.copy {
+      background-color: #777;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button.copy:hover {
+      background-color: #666;
+    }
+    
+    code {
+      background-color: #f1f1f1;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    
+    .small {
+      font-size: 14px;
+      color: #666;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Shopee Affiliate Link Generator</h2>
+  
+  <div class="input-field">
+    <label for="affiliateIdNumber">Affiliate ID (e.g., <code>14382300002</code>):</label>
+    <input type="text" id="affiliateIdNumber" placeholder="Enter your affiliate ID">
+  </div>
+  
+  <div class="input-field">
+    <label for="inputLink">Shopee Product Link:</label>
+    <input type="text" id="inputLink" placeholder="Paste Shopee product link here">
+  </div>
+  
+  <button class="generate" onclick="generateLink()">Generate Link</button>
+  
+  <div class="result">
+    <div class="result-label">Your Affiliate Link:</div>
+    <textarea id="resultLink" readonly></textarea>
+    <button class="copy" onclick="copyToClipboard()">Copy to Clipboard</button>
+    <p class="small" id="copyStatus"></p>
+  </div>
+  
+  <script>
+    function generateLink() {
+      const input = document.getElementById('inputLink').value.trim();
+      const affiliateIdNumber = document.getElementById('affiliateIdNumber').value.trim();
+      if (!input.includes('shopee.')) {
+        alert('Please enter a valid Shopee product link.');
+        return;
+      }
+      if (!affiliateIdNumber) {
+        alert('Please enter your Affiliate ID number.');
+        return;
+      }
+      // Build the full affiliate ID by prefixing "an_"
+      const affiliateId = `an_${affiliateIdNumber}`;
+      // Clean the base product URL
+      const baseURL = input.split('?')[0];
+      // Build the affiliate link
+      const finalLink = `${baseURL}?utm_source=${affiliateId}&utm_medium=affiliates&utm_campaign=default`;
+      document.getElementById('resultLink').value = finalLink;
+      document.getElementById('copyStatus').textContent = '';
+    }
+    
+    function copyToClipboard() {
+      const resultField = document.getElementById('resultLink');
+      const link = resultField.value;
+      if (!link) {
+        alert('Generate a link first.');
+        return;
+      }
+      
+      resultField.select();
+      resultField.setSelectionRange(0, 99999); // For mobile devices
+      
+      try {
+        document.execCommand('copy');
+        document.getElementById('copyStatus').textContent = '✅ Link copied to clipboard!';
+      } catch (err) {
+        document.getElementById('copyStatus').textContent = '❌ Failed to copy. Try again.';
+      }
+    }
+  </script>
+</body>
+</html>
