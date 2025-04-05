@@ -15,6 +15,7 @@
     h2 {
       color: #ee4d2d;
       margin-bottom: 20px;
+      font-weight: normal; /* Unbold the h2 text */
     }
     
     .input-field {
@@ -97,10 +98,23 @@
       color: #666;
       margin-top: 10px;
     }
+    
+    .note {
+      background-color: #fff3cd;
+      color: #856404;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 15px 0;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <h2>Shopee Affiliate Link Generator</h2>
+  
+  <div class="note">
+    <strong>Note:</strong> Due to browser security restrictions, automatic expansion of shortened Shopee URLs isn't possible in a client-side application. For shortened URLs like <code>s.shopee.sg/xxx</code>, please manually open the link in a browser first, then copy the full product URL from the address bar.
+  </div>
   
   <div class="input-field">
     <label for="affiliateIdNumber">Affiliate ID (e.g., <code>14382300002</code>):</label>
@@ -123,24 +137,55 @@
   
   <script>
     function generateLink() {
-      const input = document.getElementById('inputLink').value.trim();
+      const inputLink = document.getElementById('inputLink').value.trim();
       const affiliateIdNumber = document.getElementById('affiliateIdNumber').value.trim();
-      if (!input.includes('shopee.')) {
+      
+      if (!inputLink) {
+        alert('Please enter a Shopee product link.');
+        return;
+      }
+      
+      if (!inputLink.includes('shopee.')) {
         alert('Please enter a valid Shopee product link.');
         return;
       }
+      
       if (!affiliateIdNumber) {
         alert('Please enter your Affiliate ID number.');
         return;
       }
-      // Build the full affiliate ID by prefixing "an_"
-      const affiliateId = `an_${affiliateIdNumber}`;
-      // Clean the base product URL
-      const baseURL = input.split('?')[0];
-      // Build the affiliate link
-      const finalLink = `${baseURL}?utm_source=${affiliateId}&utm_medium=affiliates&utm_campaign=default`;
-      document.getElementById('resultLink').value = finalLink;
-      document.getElementById('copyStatus').textContent = '';
+      
+      try {
+        // Extract the base URL - handling both full and shortened URLs
+        let baseURL = '';
+        
+        if (inputLink.includes('/product/')) {
+          // This is likely a full product URL
+          // Extract just the product path without any query parameters
+          const urlObj = new URL(inputLink);
+          baseURL = urlObj.origin + urlObj.pathname;
+        } else if (inputLink.includes('s.shopee.')) {
+          // This is a shortened URL - we can't expand it client-side
+          alert('Shortened URLs cannot be automatically expanded. Please open the link in your browser first, then copy the full product URL.');
+          return;
+        } else {
+          // Some other Shopee URL format
+          baseURL = inputLink.split('?')[0];
+        }
+        
+        // Build the full affiliate ID by prefixing "an_"
+        const affiliateId = `an_${affiliateIdNumber}`;
+        
+        // Build the affiliate link
+        const finalLink = `${baseURL}?utm_source=${affiliateId}&utm_medium=affiliates&utm_campaign=default`;
+        
+        document.getElementById('resultLink').value = finalLink;
+        document.getElementById('copyStatus').textContent = '';
+        
+      } catch (error) {
+        console.error('Error generating link:', error);
+        alert('An error occurred while processing the link. Please ensure it is a valid Shopee product URL.');
+      }
     }
     
     function copyToClipboard() {
