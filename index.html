@@ -12,24 +12,20 @@
       padding: 30px 20px;
       background-color: #f9f9f9;
     }
-
     h2 {
       color: #ee4d2d;
       margin-bottom: 20px;
       font-size: 24px;
       text-align: center;
     }
-
     .input-field {
       margin-bottom: 15px;
     }
-
     label {
       display: block;
       margin-bottom: 5px;
       font-weight: bold;
     }
-
     input {
       width: 100%;
       padding: 10px;
@@ -38,7 +34,6 @@
       border-radius: 5px;
       box-sizing: border-box;
     }
-
     button.generate {
       padding: 12px;
       font-size: 16px;
@@ -50,20 +45,20 @@
       width: 100%;
       margin-top: 10px;
     }
-
     button.generate:hover {
       background-color: #dd3c1a;
     }
-
+    button.generate:disabled {
+      background-color: #f8aa9a;
+      cursor: not-allowed;
+    }
     .result {
       margin-top: 25px;
     }
-
     .result-label {
       font-weight: bold;
       margin-bottom: 5px;
     }
-
     textarea {
       width: 100%;
       height: 80px;
@@ -73,7 +68,6 @@
       font-size: 14px;
       resize: none;
     }
-
     button.copy {
       background-color: #777;
       color: white;
@@ -85,18 +79,15 @@
       width: 100%;
       margin-top: 10px;
     }
-
     button.copy:hover {
       background-color: #666;
     }
-
     .small {
       font-size: 14px;
       color: #666;
       margin-top: 10px;
       text-align: center;
     }
-
     .note {
       background-color: #fff3cd;
       color: #856404;
@@ -105,35 +96,42 @@
       margin-bottom: 20px;
       font-size: 14px;
     }
+    .loader {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
-
   <h2>Shopee Affiliate Link Generator</h2>
-
   <div class="note" id="note">
     <strong>Note:</strong> Paste full or shortened Shopee links (e.g., <code>s.shopee.sg/xyz</code>) below.
   </div>
-
   <div class="input-field">
     <label for="affiliateIdNumber">Affiliate ID (e.g., <code>14382300002</code>):</label>
     <input type="text" id="affiliateIdNumber" value="14382300002">
   </div>
-
   <div class="input-field">
     <label for="inputLink">Shopee Product Link:</label>
     <input type="text" id="inputLink" placeholder="Expand Shopee URL or paste full product link here">
   </div>
-
-  <button class="generate" onclick="generateLink()">Generate Link</button>
-
+  <button class="generate" id="generateButton" onclick="generateLink()">Generate Link</button>
   <div class="result">
     <div class="result-label">Your Affiliate Link:</div>
     <textarea id="resultLink" readonly></textarea>
     <button class="copy" onclick="copyToClipboard()">Copy to Clipboard</button>
     <p class="small" id="copyStatus"></p>
   </div>
-
   <script>
     async function expandLink(url) {
       const response = await fetch(`/api/expand?url=${encodeURIComponent(url)}`);
@@ -141,63 +139,67 @@
       if (data.expandedUrl) return data.expandedUrl;
       throw new Error(data.error || 'Failed to expand link.');
     }
-
+    
     function generateSubId() {
       return 'vercel-user-click';
     }
-
+    
     function encodeURL(url) {
       return encodeURIComponent(url);
     }
-
+    
     function getCleanBaseURL(url) {
       return url.split('?')[0];
     }
-
+    
     async function generateLink() {
       const input = document.getElementById('inputLink').value.trim();
       const affiliateId = document.getElementById('affiliateIdNumber').value.trim();
       const resultArea = document.getElementById('resultLink');
       const copyStatus = document.getElementById('copyStatus');
-
+      const generateButton = document.getElementById('generateButton');
+      
       if (!input || !affiliateId) {
         alert('Please fill in all fields.');
         return;
       }
-
+      
+      // Show loading indicator
+      generateButton.disabled = true;
+      const originalButtonText = generateButton.innerHTML;
+      generateButton.innerHTML = '<span class="loader"></span> Processing...';
+      
       try {
         let finalUrl = input;
-
         if (input.includes('s.shopee.')) {
           finalUrl = await expandLink(input);
         }
-
         // Append share_code_channel
         finalUrl = finalUrl.includes('?')
           ? `${finalUrl}&share_code_channel=3`
           : `${finalUrl}?share_code_channel=3`;
-
         const encoded = encodeURL(finalUrl);
         const subId = generateSubId();
         const finalLink = `https://s.shopee.sg/an_redir?origin_link=${encoded}&affiliate_id=${affiliateId}&sub_id=${subId}`;
-
         resultArea.value = finalLink;
         copyStatus.textContent = '';
       } catch (err) {
         console.error(err);
         alert('Error generating link: ' + err.message);
+      } finally {
+        // Restore button state
+        generateButton.innerHTML = originalButtonText;
+        generateButton.disabled = false;
       }
     }
-
+    
     async function copyToClipboard() {
       const resultLink = document.getElementById('resultLink').value;
       const statusText = document.getElementById('copyStatus');
-
       if (!resultLink) {
         alert('Generate a link first.');
         return;
       }
-
       try {
         await navigator.clipboard.writeText(resultLink);
         statusText.textContent = '✅ Link copied to clipboard!';
