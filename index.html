@@ -111,8 +111,8 @@
 
   <h2>Shopee Affiliate Link Generator</h2>
 
-  <div class="note">
-    <strong>Note:</strong> Shortened Shopee links like <code>s.shopee.sg/xxx</code> can't be expanded automatically. Open them in a browser and copy the full product URL.
+  <div class="note" id="note">
+    <strong>Note:</strong> Paste full or shortened Shopee links (e.g., <code>s.shopee.sg/xyz</code>) below.
   </div>
 
   <div class="input-field">
@@ -122,7 +122,7 @@
 
   <div class="input-field">
     <label for="inputLink">Shopee Product Link:</label>
-    <input type="text" id="inputLink" placeholder="Paste full Shopee product link here">
+    <input type="text" id="inputLink" placeholder="Expand Shopee URL or paste full product link here">
   </div>
 
   <button class="generate" onclick="generateLink()">Generate Link</button>
@@ -135,9 +135,15 @@
   </div>
 
   <script>
+    async function expandLink(url) {
+      const response = await fetch(`/api/expand?url=${encodeURIComponent(url)}`);
+      const data = await response.json();
+      if (data.expandedUrl) return data.expandedUrl;
+      throw new Error(data.error || 'Failed to expand link.');
+    }
+
     function generateSubId() {
-      // Optional: Customize or generate dynamically
-      return '----';
+      return 'vercel-user-click';
     }
 
     function encodeURL(url) {
@@ -148,38 +154,38 @@
       return url.split('?')[0];
     }
 
-    function generateLink() {
-      const inputLink = document.getElementById('inputLink').value.trim();
+    async function generateLink() {
+      const input = document.getElementById('inputLink').value.trim();
       const affiliateId = document.getElementById('affiliateIdNumber').value.trim();
+      const resultArea = document.getElementById('resultLink');
+      const copyStatus = document.getElementById('copyStatus');
 
-      if (!inputLink) {
-        alert('Please enter a Shopee product link.');
-        return;
-      }
-
-      if (!inputLink.includes('shopee.')) {
-        alert('Please enter a valid Shopee product link.');
-        return;
-      }
-
-      if (inputLink.includes('s.shopee.')) {
-        alert('Shortened URLs cannot be expanded automatically. Open it in your browser and copy the full product URL.');
+      if (!input || !affiliateId) {
+        alert('Please fill in all fields.');
         return;
       }
 
       try {
-        const cleanedLink = getCleanBaseURL(inputLink);
-        const encodedLink = encodeURL(cleanedLink);
+        let finalUrl = input;
+
+        if (input.includes('s.shopee.')) {
+          finalUrl = await expandLink(input);
+        }
+
+        // Append share_code_channel
+        finalUrl = finalUrl.includes('?')
+          ? `${finalUrl}&share_code_channel=3`
+          : `${finalUrl}?share_code_channel=3`;
+
+        const encoded = encodeURL(finalUrl);
         const subId = generateSubId();
+        const finalLink = `https://s.shopee.sg/an_redir?origin_link=${encoded}&affiliate_id=${affiliateId}&sub_id=${subId}`;
 
-        const finalLink = `https://s.shopee.sg/an_redir?origin_link=${encodedLink}&affiliate_id=${affiliateId}&sub_id=${subId}`;
-
-        document.getElementById('resultLink').value = finalLink;
-        document.getElementById('copyStatus').textContent = '';
-
-      } catch (error) {
-        console.error('Error:', error);
-        alert('An error occurred while generating the link.');
+        resultArea.value = finalLink;
+        copyStatus.textContent = '';
+      } catch (err) {
+        console.error(err);
+        alert('Error generating link: ' + err.message);
       }
     }
 
@@ -201,6 +207,5 @@
       }
     }
   </script>
-
 </body>
 </html>
