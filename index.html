@@ -141,7 +141,7 @@
     }
     
     function generateSubId() {
-      return 'vercel-user-click';
+      return '----';
     }
     
     function encodeURL(url) {
@@ -193,21 +193,24 @@
       }
     }
     
-    async function copyToClipboard() {
-      const resultLink = document.getElementById('resultLink').value;
-      const statusText = document.getElementById('copyStatus');
-      if (!resultLink) {
-        alert('Generate a link first.');
-        return;
-      }
-      try {
-        await navigator.clipboard.writeText(resultLink);
-        statusText.textContent = '✅ Link copied to clipboard!';
-      } catch (err) {
-        console.error('Copy failed:', err);
-        statusText.textContent = '❌ Failed to copy. Please try manually.';
-      }
+  async function copyToClipboard() {
+    const resultLink = document.getElementById('resultLink').value;
+    const statusText = document.getElementById('copyStatus');
+  
+    if (!resultLink) {
+      alert('Generate a link first.');
+      return;
     }
+  
+    try {
+      await navigator.clipboard.writeText(resultLink);
+      window.open(resultLink, '_blank'); // Open in new tab
+      statusText.textContent = '✅ Link copied and opened in new tab!';
+    } catch (err) {
+      console.error('Copy failed:', err);
+      statusText.textContent = '❌ Failed to copy. Please try manually.';
+    }
+  }
   </script>
 </body>
 </html>
