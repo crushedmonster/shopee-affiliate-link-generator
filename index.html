@@ -139,45 +139,36 @@
       if (data.expandedUrl) return data.expandedUrl;
       throw new Error(data.error || 'Failed to expand link.');
     }
-    
     function generateSubId() {
-      return '----';
+      return 'vercel-user-click';
     }
-    
     function encodeURL(url) {
       return encodeURIComponent(url);
     }
-    
     function getCleanBaseURL(url) {
       return url.split('?')[0];
     }
-    
     async function generateLink() {
       const input = document.getElementById('inputLink').value.trim();
       const affiliateId = document.getElementById('affiliateIdNumber').value.trim();
       const resultArea = document.getElementById('resultLink');
       const copyStatus = document.getElementById('copyStatus');
       const generateButton = document.getElementById('generateButton');
-      
       if (!input || !affiliateId) {
         alert('Please fill in all fields.');
         return;
       }
-      
       // Show loading indicator
       generateButton.disabled = true;
       const originalButtonText = generateButton.innerHTML;
       generateButton.innerHTML = '<span class="loader"></span> Processing...';
-      
       try {
         let finalUrl = input;
         if (input.includes('s.shopee.')) {
           finalUrl = await expandLink(input);
         }
-        // Append share_code_channel
-        finalUrl = finalUrl.includes('?')
-          ? `${finalUrl}&share_code_channel=3`
-          : `${finalUrl}?share_code_channel=3`;
+        // Get clean base URL without any parameters
+        finalUrl = getCleanBaseURL(finalUrl);
         const encoded = encodeURL(finalUrl);
         const subId = generateSubId();
         const finalLink = `https://s.shopee.sg/an_redir?origin_link=${encoded}&affiliate_id=${affiliateId}&sub_id=${subId}`;
@@ -192,16 +183,13 @@
         generateButton.disabled = false;
       }
     }
-    
   async function copyToClipboard() {
     const resultLink = document.getElementById('resultLink').value;
     const statusText = document.getElementById('copyStatus');
-  
     if (!resultLink) {
       alert('Generate a link first.');
       return;
     }
-  
     try {
       await navigator.clipboard.writeText(resultLink);
       window.open(resultLink, '_blank'); // Open in new tab
